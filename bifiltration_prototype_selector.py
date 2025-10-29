@@ -8,7 +8,7 @@ from ripser import ripser
 import warnings
 warnings.filterwarnings('ignore')
 
-class WeightedBifiltrationPrototypeSelector:
+class BifiltrationPrototypeSelector:
     def __init__(self, k_neighbors=5, homology_dimension=0, min_persistence=0.01,
                  neighbor_quantile=0.15, radius_statistic='mean',
                  metric='euclidean', metric_params=None):
@@ -19,13 +19,13 @@ class WeightedBifiltrationPrototypeSelector:
         1. Each vertex has two parameters: radius (r) and neighbor (n)
            - radius = sum of distances to ALL same-class neighbors
            - neighbor = sum of distances to k nearest other-class neighbors
-        2. We run a SEQUENTIAL two-step filtration process:
+        2. We run a sequential two-step filtration process:
            - STEP 1 - Neighbor filtration: based on inter-class separation
              Select the feature whose lifetime minimizes |lifetime - quantile(lifetimes)|
            - STEP 2 - Radius filtration: based on intra-class structure
              Run ONLY on vertices from neighbor filtration (level set)
              Select the feature whose lifetime minimizes |lifetime - mean(lifetimes)| (or median)
-        3. Final prototypes are vertices from the radius filtration
+        3. Final prototypes are vertices from the selected subcomplex of the radius filtration
            (which are already restricted by the neighbor filtration vertices)
 
         Parameters:
@@ -132,12 +132,12 @@ class WeightedBifiltrationPrototypeSelector:
         1. Compute two parameters for each vertex:
            - radius_values: sum of distances to ALL same-class neighbors
            - neighbor_values: sum of distances to k nearest other-class neighbors
-        2. Run persistence on NEIGHBOR filtration (FIRST)
+        2. Run persistence on NEIGHBOR filtration 
            - Create vertex-weighted filtration using neighbor_values
            - Extract features with significant persistence
            - Select feature whose lifetime is closest to quantile threshold
            - Extract participating vertices
-        3. Run persistence on RADIUS filtration (SECOND, on subset)
+        3. Run persistence on RADIUS filtration
            - Restrict to vertices from neighbor filtration (level set)
            - Create vertex-weighted filtration using radius_values
            - Extract features with significant persistence
@@ -676,15 +676,15 @@ def test_level_set_bifiltration():
                               n_informative=2, n_clusters_per_class=2,
                               class_sep=1.0, random_state=42)
 
-    print("\nWeighted Vertex Bifiltration Level Set Approach:")
+    print("\nBifiltration Approach:")
     print("- Step 1: Run neighbor filtration (inter-class separation)")
     print("- Step 2: Run radius filtration on neighbor vertices (level set)")
-    print("- Uses sum of ALL distances for calculation of radius vertex weights")
     print("- Uses sum of distances to k_neighbors for neighbor vertex weights")
-    print("- Selects features closest to threshold (true level set)")
+    print("- Uses sum of ALL distances for calculation of radius vertex weights")
+    print("- Selects features closest to thresholds in each step")
     print("-" * 70)
 
-    selector = WeightedBifiltrationPrototypeSelector(
+    selector = BifiltrationPrototypeSelector(
         k_neighbors=3,
         homology_dimension=0,
         min_persistence=0.001,
